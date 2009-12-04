@@ -378,12 +378,12 @@ def getX12Spec837p():
     __ansi837_spec = X12LoopSpec("0", 1, loop0_specs)
     return __ansi837_spec
 
-def parse837p(fname):
-    return X12Document(file(fname, "r"), getX12Spec837p())
+def parse837p(file_obj):
+    return X12Document(file_obj, getX12Spec837p())
 
-def isFileAnsi837p(fname):
+def isFileAnsi837p(file_obj):
     try:
-        a = parse837p(fname)
+        a = parse837p(file_obj)
     except X12ParseError:
         return False
     return True
@@ -410,8 +410,9 @@ if __name__ == "__main__":
     opts, args = getopt.getopt(sys.argv[1:], 'h', [ 'help' ])
     
     fname = args[0]
+    f = file(fname, 'r')
     try:
-        a = parse837p(fname)
+        a = parse837p(f)
         a.dump()
     except ValueError, e:
         print "file does not appear to be an ANSI 837 file!"

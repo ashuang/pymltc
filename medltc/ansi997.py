@@ -29,12 +29,12 @@ def getX12Spec997():
     __ansi997_spec = X12LoopSpec("0", 1, loop0_specs)
     return __ansi997_spec
 
-def parse997(fname):
-    return X12Document(file(fname, "r"), getX12Spec997())
+def parse997(file_object):
+    return X12Document(file_object, getX12Spec997())
 
-def isFileAnsi997(fname):
+def isFileAnsi997(file_object):
     try:
-        a = parse997(fname)
+        a = parse997(file_object)
     except X12ParseError:
         return False
     return True
@@ -61,8 +61,9 @@ if __name__ == "__main__":
     opts, args = getopt.getopt(sys.argv[1:], 'h', [ 'help' ])
     
     fname = args[0]
+    f = file(fname, 'r')
     try:
-        a997 = parse997(fname)
+        a997 = parse997(f)
         a997.dump()
     except ValueError, e:
         print "file does not appear to be an ANSI 997 file!"

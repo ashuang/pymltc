@@ -9,10 +9,11 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 fname = sys.argv[1]
-doc = ansi837p.parse837p(fname)
+f = file(fname, 'r')
+doc = ansi837p.parse837p(f)
 
 print "ANSI837P"
-print "ISA ID:   %s" % doc.getDocumentID()
+print "ISA ICN:  %s" % doc.getInterchangeControlNumber()
 print "Date:     %s" % doc.getDocumentDate()
 print "Time:     %s" % doc.getDocumentTime()
 print "Receiver: %s" % doc.getReceiverID()

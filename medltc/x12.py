@@ -465,7 +465,7 @@ class _X12DocumentHandler(X12Handler):
         if icvn != "00401":
             raise X12ParseError("Invalid ISA12: [%s]" % icvn)
 
-        self.doc.isaID = isa.getElement(13)
+        self.doc.isaICN = isa.getElement(13)
 
         ui = isa.getElement(15)
         if ui not in "PT":
@@ -477,9 +477,9 @@ class _X12DocumentHandler(X12Handler):
         # TODO check number of functional groups
 
         icn = iea.getElement(2)
-        if icn != self.doc.isaID:
+        if icn != self.doc.isaICN:
             self.__warn("IEA02 does not match ISA13: %s / %s" % \
-                    (icn, self.doc.isaID))
+                    (icn, self.doc.isaICN))
 
     def startTransactionSet(self, st):
         self.segment(st.getName(), st)
@@ -565,7 +565,7 @@ class X12Document(object):
         self.isaReceiverIDType = "ZZ"
         self.isaDate = None
         self.isaTime = None
-        self.isaID = None
+        self.isaICN = None
         self.isaProduction = False
 
         handler = _X12DocumentHandler(self, spec)
@@ -591,8 +591,8 @@ class X12Document(object):
     def getReceiverIDType(self):
         return self.isaReceiverIDType
 
-    def getDocumentID(self):
-        return self.isaID
+    def getInterchangeControlNumber(self):
+        return self.isaICN
 
     def isProductionMode(self):
         return self.isaProduction
