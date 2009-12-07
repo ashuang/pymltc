@@ -62,6 +62,17 @@ class X12Segment(object):
     def dump(self, indent=0):
         print ("%s%s" % (("  " * indent), self.name))
 
+    def __elemToStr(self, elem, subelem_separator):
+        if type(elem) == types.TupleType:
+            return subelem_separator.join(elem)
+        else:
+            return str(elem)
+
+    def format(self, elem_separator="*", subelem_separator=":", segment_terminator="~"):
+        return "%s%s%s%s" % (self.name, elem_separator, 
+                elem_separator.join([ self.__elemToStr(e, subelem_separator) for e in self.elements ]),
+                segment_terminator)
+
     def getName(self):
         return self.name
 
@@ -554,6 +565,7 @@ class _X12DocumentHandler(X12Handler):
                         segname)
             else:
                 self.loopStack[-1].index += 1
+        self.doc.all_segments.append(seg)
 
 class X12Document(object):
     def __init__(self, f, spec):
@@ -567,6 +579,7 @@ class X12Document(object):
         self.isaTime = None
         self.isaICN = None
         self.isaProduction = False
+        self.all_segments = []
 
         handler = _X12DocumentHandler(self, spec)
 
