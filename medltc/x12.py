@@ -497,6 +497,13 @@ class _X12DocumentHandler(X12Handler):
     def endTransactionSet(self, se):
         self.segment(se.getName(), se)
 
+    def interchangeAcknowledgment(self, ta1):
+        self.doc.ta1ICN = ta1.getElement(1)
+        self.doc.ta1Date = yymmdd2date(ta1.getElement(2))
+        self.doc.ta1Time = hhmm2time(ta1.getElement(3))
+        self.doc.ta1Status = ta1.getElement(4)
+        self.doc.ta1Code = ta1.getElement(5)
+
     def matchSegment(self, segname, seg, lp):
         # is there more in this loop?
         specs = lp.loopSpec.getSpecs()
@@ -581,6 +588,12 @@ class X12Document(object):
         self.isaProduction = False
         self.all_segments = []
 
+        self.ta1ICN = None
+        self.ta1Date = None
+        self.ta1Time = None
+        self.ta1Status = None
+        self.ta1Code = None
+
         handler = _X12DocumentHandler(self, spec)
 
         parser = X12Parser()
@@ -610,11 +623,75 @@ class X12Document(object):
     def isProductionMode(self):
         return self.isaProduction
 
+    def hasTA1(self):
+        return self.ta1ICN is not None
+
+    def getTA1ICN(self):
+        assert(self.ta1ICN is not None)
+        return self.ta1ICN
+
+    def getTA1Date(self):
+        return self.ta1Date
+
+    def getTA1Time(self):
+        return self.ta1Time
+
+    def getTA1AcknowledgementCode(self):
+        return self.ta1Status
+
+    def getTA1NoteCode(self):
+        return self.ta1Code
+
     def getRootLoop(self):
         return self.loop0
 
     def dump(self):
         self.loop0.dump()
+
+__ta1_note_codes = { \
+        '000' : 'No error',
+        '001' : 'The Interchange Control Number in the Header and Trailer Do Not Match. The Value From the Header is Used in the Acknowledgment.',
+        '002' : 'This Standard as Noted in the Control Standards Identifier is Not Supported.',
+        '003' : 'This Version of the Controls is Not Supported',
+        '004' : 'The Segment Terminator is Invalid',
+        '005' : 'Invalid Interchange ID Qualifier for Sender',
+        '006' : 'Invalid Interchange Sender ID',
+        '007' : 'Invalid Interchange ID Qualifier for Receiver',
+        '008' : 'Invalid Interchange Receiver ID',
+        '009' : 'Unknown Interchange Receiver ID',
+        '010' : 'Invalid Authorization Information Qualifier Value',
+        '011' : 'Invalid Authorization Information Value',
+        '012' : 'Invalid Security Information Qualifier Value',
+        '013' : 'Invalid Security Information Value',
+        '014' : 'Invalid Interchange Date Value',
+        '015' : 'Invalid Interchange Time Value',
+        '016' : 'Invalid Interchange Standards Identifier Value',
+        '017' : 'Invalid Interchange Version ID Value',
+        '018' : 'Invalid Interchange Control Number Value',
+        '019' : 'Invalid Acknowledgment Requested Value',
+        '020' : 'Invalid Test Indicator Value',
+        '021' : 'Invalid Number of Included Groups Value',
+        '022' : 'Invalid Control Structure',
+        '023' : 'Improper (Premature) End-of-File (Transmission)',
+        '024' : 'Invalid Interchange Content (e.g., Invalid GS Segment)',
+        '025' : 'Duplicate Interchange Control Number',
+        '026' : 'Invalid Data Element Separator',
+        '027' : 'Invalid Component Element Separator',
+        '028' : 'Invalid Delivery Date in Deferred Delivery Request',
+        '029' : 'Invalid Delivery Time in Deferred Delivery Request',
+        '030' : 'Invalid Delivery Time Code in Deferred Delivery Request',
+        '031' : 'Invalid Grade of Service Code' }
+
+__ta1_acknowledgment_codes = { \
+        'A' : 'The Transmitted Interchange Control Structure Header and Trailer Have Been Received and Have No Errors.',
+        'E' : 'The Transmitted Interchange Control Structure Header and Trailer Have Been Received and Are Accepted But Errors Are Noted. This Means the Sender Must Not Resend This Data.',
+        'R' : 'The Transmitted Interchange Control Structure Header and Trailer are Rejected Because of Errors.' }
+
+def ta1NoteCodeToStr(note_code):
+    return __ta1_note_codes[note_code]
+
+def ta1AcknowledgmentCodeToStr(acknowledgment_code):
+    return __ta1_acknowledgment_codes[acknowledgment_code]
 
 def dbg(text):
     pass
