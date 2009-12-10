@@ -502,10 +502,10 @@ class _X12DocumentHandler(X12Handler):
     def startTransactionSet(self, st):
         if len(self.loopStack) > 0:
             raise X12ParseError("Unexpected ST")
-        self.loopStack = []
 
         stobj = X12TransactionSet(st)
         self.doc.functional_groups[-1].transaction_sets.append(stobj)
+        self.loopStack = [ _LoopParseStatus(self.spec, stobj.loop0) ]
 
         self.segment(st.getName(), st)
 
