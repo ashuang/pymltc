@@ -455,7 +455,7 @@ class _X12DocumentHandler(X12Handler):
         self.doc = document
         self.spec = spec
 
-        self.loopStack = [ _LoopParseStatus(spec, self.doc.loop0) ]
+        self.loopStack = []
 
     def __warn(self, msg):
         sys.stderr.write("WARNING: %s\n" % msg)
@@ -492,10 +492,26 @@ class _X12DocumentHandler(X12Handler):
             self.__warn("IEA02 does not match ISA13: %s / %s" % \
                     (icn, self.doc.isaICN))
 
+    def startFunctionalGroup(self, gs_segment):
+        fg = X12FunctionalGroup(gs_segment)
+        self.doc.functional_groups.append(fg)
+
+    def endFunctionalGroup(self, ge_segment):
+        pass
+
     def startTransactionSet(self, st):
+        if len(self.loopStack) > 0:
+            raise X12ParseError("Unexpected ST")
+        self.loopStack = []
+
+        stobj = X12TransactionSet(st)
+        self.doc.functional_groups[-1].transaction_sets.append(stobj)
+
         self.segment(st.getName(), st)
+
     def endTransactionSet(self, se):
         self.segment(se.getName(), se)
+        self.loopStack = []
 
     def interchangeAcknowledgment(self, ta1):
         self.doc.ta1ICN = ta1.getElement(1)
@@ -574,10 +590,40 @@ class _X12DocumentHandler(X12Handler):
                 self.loopStack[-1].index += 1
         self.doc.all_segments.append(seg)
 
+class X12TransactionSet(object):
+    def __init__(self, st_seg):
+        self.tsid = st_seg.getElement(1)
+        self.tscn = st_seg.getElement(2)
+        self.loop0 = X12Loop("ST")
+
+    def getTransactionSetControlNumber(self):
+        return self.tscn
+
+    def getRootLoop(self):
+        return self.loop0
+
+    def dump(self):
+        self.loop0.dump()
+
+class X12FunctionalGroup(object):
+    def __init__(self, gs_seg):
+        self.fic = gs_seg.getElement(1)
+        self.gcn = gs_seg.getElement(6)
+        self.transaction_sets = []
+
+    def getGroupControlNumber(self):
+        return self.gcn
+
+    def getTransactionSets(self):
+        return self.transaction_sets
+
+    def dump(self):
+        # TODO
+        for ts in self.transaction_sets:
+            ts.dump()
+
 class X12Document(object):
     def __init__(self, f, spec):
-        self.loop0 = X12Loop("0")
-
         self.isaSenderID = None
         self.isaSenderIDType = "ZZ"
         self.isaReceiverID = None
@@ -593,6 +639,8 @@ class X12Document(object):
         self.ta1Time = None
         self.ta1Status = None
         self.ta1Code = None
+
+        self.functional_groups = []
 
         handler = _X12DocumentHandler(self, spec)
 
@@ -642,11 +690,13 @@ class X12Document(object):
     def getTA1NoteCode(self):
         return self.ta1Code
 
-    def getRootLoop(self):
-        return self.loop0
+    def getFunctionalGroups(self):
+        return self.functional_groups
 
     def dump(self):
-        self.loop0.dump()
+        for fg in self.functional_groups:
+            for ts in self.transaction_sets:
+                ts.dump()
 
 __ta1_note_codes = { \
         '000' : 'No error',
