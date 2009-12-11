@@ -695,7 +695,7 @@ class X12Document(object):
 
     def dump(self):
         for fg in self.functional_groups:
-            for ts in self.transaction_sets:
+            for ts in fg.transaction_sets:
                 ts.dump()
 
 __ta1_note_codes = { \
