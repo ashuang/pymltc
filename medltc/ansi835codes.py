@@ -1,4 +1,4 @@
-def get_remarks():
+def __get_remarks():
     from xml.dom import minidom
 
     doc = minidom.parseString(__xml)
@@ -1311,7 +1311,7 @@ The patient has received a separate notice of this denial decision. The notice a
 </remarks>
 """
 
-remarks = get_remarks()
+__remarks = __get_remarks()
 
 __car2str_map = { 
       "1" : "Deductible Amount",
@@ -1523,11 +1523,11 @@ __car2str_map = {
       "D15" : "Claim lacks indication that service was supervised or evaluated by a physician.",
       "W1" : "Workers Compensation State Fee Schedule Adjustment" }
 
-def ClaimAdjustmentReasonToStr( code ):
+def ClaimAdjustmentReasonToStr(code):
     return __car2str_map[code]
 
-def get_reasons():
-    return __car2str_map 
+def RemarkCodeToStr(code):
+    return __remarks[code]
 
 __claim_status_map = { "0": "UNDEFINED",
               "1" : "Processed as Primary",
@@ -1548,11 +1548,8 @@ __claim_status_map = { "0": "UNDEFINED",
               "25" : "Predetermination Pricing Only - No Payment",
               "27" : "something bad"
               }
-def ClaimStatusToStr( code ):
-    return __claim_status_map[ code ]
-
-def get_statuses():
-    return __claim_status_map
+def CLPStatusCodeToStr(code):
+    return __claim_status_map[code]
 
 if __name__ == "__main__":
     import sys
@@ -1567,7 +1564,7 @@ if __name__ == "__main__":
                        ( "DESC",     "C", 254,  0, False ),
                        ] )
 
-            for code, description in remarks.items():
+            for code, description in __remarks.items():
                 db.append_blank()
                 db["CODE"] = code
                 db["DESC"] = description[:254]
