@@ -194,7 +194,7 @@ class SimpleHandler(X12Handler):
         print "  [TA1]"
 
     def segment(self, segname, seg):
-        print "      [%s]" % segname()
+        print "      [%s]" % segname
 
 class X12ElementSpec(object):
     def __init__(self, index, *values):
@@ -412,6 +412,10 @@ class X12Parser(object):
                 c = self.f.read(1)
                 if len(c) != 1:
                     self.__fail("error reading element/segment separator")
+
+                if not elements and not elem_chars and c.isspace():
+                    # allow whitespace in between segments
+                    continue
                 if c == self.elem_sep:
                     break
                 elif c == self.segment_sep:

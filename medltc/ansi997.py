@@ -152,6 +152,7 @@ if __name__ == "__main__":
 
 OPTIONS:
     -h, --help      shows this help text\n"""
+        usage()
         print usage_str
 
     if len(sys.argv) < 2:
