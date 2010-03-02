@@ -1526,7 +1526,7 @@ __car2str_map = {
 def ClaimAdjustmentReasonToStr(code):
     return __car2str_map[code]
 
-def RemarkCodeToStr(code):
+def RemarkCodeToStr(code_list, code):
     return __remarks[code]
 
 __claim_status_map = { "0": "UNDEFINED",

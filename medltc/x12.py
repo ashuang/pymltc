@@ -79,6 +79,9 @@ class X12Segment(object):
     def getElement(self, index):
         return self.elements[index-1]
 
+    def getElements(self):
+        return self.elements
+
     def numElements(self):
         return len(self.elements)
 
