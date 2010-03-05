@@ -1524,10 +1524,16 @@ __car2str_map = {
       "W1" : "Workers Compensation State Fee Schedule Adjustment" }
 
 def ClaimAdjustmentReasonToStr(code):
-    return __car2str_map[code]
+    try:
+        return __car2str_map[code]
+    except KeyError:
+        return "UNKNOWN CODE!"
 
 def RemarkCodeToStr(code_list, code):
-    return __remarks[code]
+    try:
+        return __remarks[code]
+    except KeyError:
+        return "UNKNOWN CODE!"
 
 __claim_status_map = { "0": "UNDEFINED",
               "1" : "Processed as Primary",
