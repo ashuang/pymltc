@@ -8,5 +8,7 @@ setup (name = 'MedLTC',
        description = 'MedLTC',
        author="Albert Huang",
        author_email="ash@medltc.com",
-       packages = [ "medltc" ],
+       packages = [ "medltc", 
+                    "medltc.django", 
+                    "medltc.django.models" ],
        )
