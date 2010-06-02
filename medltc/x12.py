@@ -48,6 +48,8 @@ class X12Segment(object):
     def __init__(self, name, elements):
         self.name = name
         self.elements = elements
+        # segment position within transaction set.
+        self.st_seg_pos = 0
 
         for e in elements:
             te = type(e)
@@ -88,8 +90,8 @@ class X12Segment(object):
     def getSubElement(self, index, sub_index):
         e = self.elements[index-1]
         if type(e) != types.TupleType:
-            raise ValueError("%s%02d does not have sub-elements" % \
-                    (self.name, index))
+            raise ValueError("%s%02d (pos %d) does not have sub-elements" % \
+                    (self.name, index, self.st_seg_pos))
         return e[sub_index-1]
 
     def numSubElements(self, index):
@@ -98,6 +100,9 @@ class X12Segment(object):
             return 1
         else:
             return len(e)
+
+    def setSegmentPosition(self, pos):
+        self.st_seg_pos = pos
 
 class X12Loop(object):
     def __init__(self, loop_name):
@@ -308,6 +313,8 @@ class X12Parser(object):
         self.subelem_sep = None
         self.segment_sep = None
         self.handler = handler
+        self.st_seg_pos = 0
+        self.in_st = False
 
         # ========= parse the ISA segment ==========
 
@@ -380,6 +387,8 @@ class X12Parser(object):
                 seg = self.__readSegment()
                 if seg.getName() == "ST":
                     self.handler.startTransactionSet(seg)
+                    seg.setSegmentPosition(1)
+                    self.st_seg_pos += 1
                     n_transaction_sets += 1
                 elif n_transaction_sets == 0:
                     self.__fail("Expected ST segment, got [%s]\n" % seg.getName())
@@ -391,6 +400,8 @@ class X12Parser(object):
 
                 while True:
                     seg = self.__readSegment()
+                    seg.setSegmentPosition(self.st_seg_pos)
+                    self.st_seg_pos += 1
                     if seg.getName() == "SE":
                         self.handler.endTransactionSet(seg)
                         break
