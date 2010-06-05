@@ -1,3 +1,4 @@
+import gobject
 import gtk
 
 import medltc.django
@@ -41,6 +42,8 @@ class PatientFinder(gtk.Frame):
         sw.add (self.selector)
         hpane.pack2(sw, resize = True)
 
+        self.selector.connect("patient-selected", self.__on_patient_selected)
+
     def __find_patients(self):
         ln = self.lastname_te.get_text().upper()
         fn = self.firstname_te.get_text().upper()
@@ -67,11 +70,25 @@ class PatientFinder(gtk.Frame):
     def __on_recordno_te_changed(self, te):
         self.__find_patients()
 
+    def __on_patient_selected(self, pfinder, patient):
+        self.emit("patient-selected", patient)
+
+gobject.type_register(PatientFinder)
+gobject.signal_new("patient-selected", PatientFinder, 
+        gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+
 if __name__ == "__main__":
+    def on_patient_selected(pfinder, patient):
+        print "PatientFinder selected %s, %s (%d)" % \
+                (patient.lastname, patient.firstname, patient.recordno)
+
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    window.set_default_size(600, 400)
+    window.set_title("PatientFinder")
     window.connect("delete_event", lambda *a: gtk.main_quit())
     pfinder = PatientFinder()
     window.add(pfinder)
     window.show_all()
+    pfinder.connect("patient-selected", on_patient_selected)
     gtk.main()
 

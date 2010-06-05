@@ -10,5 +10,6 @@ setup (name = 'MedLTC',
        author_email="ash@medltc.com",
        packages = [ "medltc", 
                     "medltc.django", 
-                    "medltc.django.models" ],
+                    "medltc.django.models",
+                    "medltc.gtk" ],
        )

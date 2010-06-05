@@ -38,10 +38,20 @@ class PatientSelector(gtk.TreeView):
             col.set_resizable (True)
             self.cmds_tv.append_column (col)
 
+        self.cmds_tv.connect("row-activated", self.__on_row_activated)
+
     def set_patients(self, patients):
         self.cmds_ts.clear()
         for p in patients:
             new_row = (p, p.lastname, p.firstname, str(p.dob), p.recordno)
             self.cmds_ts.append(new_row)
 
-    # TODO add selected signal
+    def __on_row_activated(self, treeview, path, column):
+        iter = self.cmds_ts.get_iter(path)
+        patient = self.cmds_ts.get_value(iter, 0)
+        if patient:
+            self.emit("patient-selected", patient)
+
+gobject.type_register(PatientSelector)
+gobject.signal_new("patient-selected", PatientSelector, 
+        gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
