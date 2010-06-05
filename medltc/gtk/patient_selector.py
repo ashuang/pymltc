@@ -52,6 +52,13 @@ class PatientSelector(gtk.TreeView):
         if patient:
             self.emit("patient-selected", patient)
 
+    def get_patient_at_cursor(self):
+        path, column = self.cmds_tv.get_cursor()
+        if path is None:
+            return None
+        iter = self.cmds_ts.get_iter(path)
+        return self.cmds_ts.get_value(iter, 0)
+
 gobject.type_register(PatientSelector)
 gobject.signal_new("patient-selected", PatientSelector, 
         gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))

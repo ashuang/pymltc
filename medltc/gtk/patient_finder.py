@@ -73,6 +73,9 @@ class PatientFinder(gtk.Frame):
     def __on_patient_selected(self, pfinder, patient):
         self.emit("patient-selected", patient)
 
+    def get_patient_at_cursor(self):
+        return self.selector.get_patient_at_cursor()
+
 gobject.type_register(PatientFinder)
 gobject.signal_new("patient-selected", PatientFinder, 
         gobject.SIGNAL_RUN_FIRST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
