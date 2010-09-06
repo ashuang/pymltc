@@ -274,7 +274,7 @@ class dbf:
         self.__eof = None
         self.nrecs = 0
         self.position = -1
-        self.r = None
+        self.record = None
 
         self.open(filename)
         
@@ -353,11 +353,11 @@ class dbf:
         rawtext = self.f.read(self.recordsize)
         if( len(rawtext) == 1):
             assert rawtext == "\x1a"
-            self.r = self.__eof
+            self.record = self.__eof
             self.f.seek(-1, 1)
             self.position = -1
             return 
-        self.r = record(self.fields, rawtext)
+        self.record = record(self.fields, rawtext)
         self.f.seek(-self.recordsize, 1)
 
         self.position = (self.f.tell() - self.headersize) / self.recordsize
@@ -381,7 +381,7 @@ class dbf:
             self.flush_record()
             self.f.close()
             self.f = None
-            self.r = None
+            self.record = None
         else:
             raise ValueError("no files are open")
 
@@ -389,7 +389,7 @@ class dbf:
         """True if the current position is at the end of the file, and there is
         no valid record to access
         """
-        return (self.r == self.__eof)
+        return (self.record == self.__eof)
 
     def skip(self, amount = 1):
         """flushes the current record to disk, and skips the specified number
@@ -442,8 +442,8 @@ class dbf:
         removed by a call to pack()
         """
         if self.eof(): raise ValueError("EOF")
-        if not self.r.deleted:
-            self.r.deleted = True
+        if not self.record.deleted:
+            self.record.deleted = True
             self.f.write("\x2a")
             self.f.seek(-1,1)
 
@@ -452,8 +452,8 @@ class dbf:
         record is not marked for deletion
         """
         if self.eof(): raise ValueError("EOF")
-        if self.r.deleted:
-            self.r.deleted = False
+        if self.record.deleted:
+            self.record.deleted = False
             self.f.write("\x2a")
             self.f.seek(-1,1)
 
@@ -507,8 +507,8 @@ class dbf:
 
         if self.eof(): return
 
-        if self.r.dirty:
-            self.f.write(self.r.get_rawtext())
+        if self.record.dirty:
+            self.f.write(self.record.get_rawtext())
             self.f.seek(-1 * self.recordsize, 1)
 
     def append_blank(self):
@@ -532,8 +532,8 @@ class dbf:
 
     def __getitem__(self, key):
         """gets the value of a field in the current record"""
-        if self.r != self.__eof:
-            return self.r[key]
+        if self.record != self.__eof:
+            return self.record[key]
         else:
             raise ValueError("EOF")
 
@@ -542,7 +542,7 @@ class dbf:
         if self.eof():
             raise ValueError("EOF")
         
-        self.r[key] = value
+        self.record[key] = value
 
 def create( fname, field_descriptors ):
     numfields = len(field_descriptors)
