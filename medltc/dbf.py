@@ -54,6 +54,17 @@ class field:
         self.len = ord(rawtext[16])
         self.decimal = ord(rawtext[17])
         self.offset = offset
+
+        if self.type == "C":
+            self.__format_str = "%%-%ds" % self.len
+            print self.name, self.len, self.__format_str
+        elif self.type == "N" or self.type == "F":
+            if self.decimal:
+                self.__format_str = ("%%%d.%df" % (self.len, self.decimal))
+            else:
+                self.__format_str = ("%%%dd" % self.len)
+        else:
+            self.__format_str = None
 #        self.work_area_id = rawtext[20]
 #        t = ord(rawtext[31])
 #        if t == 0: 
@@ -66,6 +77,21 @@ class field:
     def info(self):
         s = "[%s, %s, %d, %d]" % (self.name, self.type, self.len, self.decimal)
         return s
+
+    def format_value(self, value):
+        if self.type == "C":
+            return self.__format_str % value.replace("\x19", " ")
+        elif self.type == "D":
+            return value.strftime("%m/%d/%Y")
+        elif self.type == "F":
+            return self.__format_str % value
+        elif self.type == "L":
+            raise NotImplementedError()
+        elif self.type == "M":
+            raise NotImplementedError()
+        elif self.type == "N":
+            return self.__format_str % value
+        raise ValueError()
 
 class record:
     def __init__(self, fields, rawtext):
