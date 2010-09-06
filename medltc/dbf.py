@@ -57,7 +57,7 @@ class field:
 
         if self.type == "C":
             self.__format_str = "%%-%ds" % self.len
-            print self.name, self.len, self.__format_str
+#            print self.name, self.len, self.__format_str
         elif self.type == "N" or self.type == "F":
             if self.decimal:
                 self.__format_str = ("%%%d.%df" % (self.len, self.decimal))
