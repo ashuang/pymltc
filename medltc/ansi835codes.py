@@ -1557,6 +1557,9 @@ __claim_status_map = { "0": "UNDEFINED",
 def CLPStatusCodeToStr(code):
     return __claim_status_map[code]
 
+def CLPStatusCodeIsPaid(code):
+    return code in [ "1", "2", "3", "19", "20", "21" ]
+
 if __name__ == "__main__":
     import sys
 
