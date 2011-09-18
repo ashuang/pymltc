@@ -228,7 +228,7 @@ class X12SegmentSpec(object):
         if max_repeat < 1:
             raise ValueError("Invalid max_repeat")
 
-        assert(all([isinstance(es, X12ElementSpec) for es in element_specs]))
+#        assert(all([isinstance(es, X12ElementSpec) for es in element_specs]))
 
     def isSegmentSpec(self):
         return True
@@ -270,8 +270,8 @@ class X12LoopSpec(object):
         assert self.specs[0].isSegmentSpec()
         assert self.specs[0].getMaxSegmentRepeat() == 1
 
-        assert(all([isinstance(sl, X12LoopSpec) or isinstance(sl, X12SegmentSpec) \
-                for sl in segment_and_loop_specs]))
+#        assert(all([isinstance(sl, X12LoopSpec) or isinstance(sl, X12SegmentSpec) \
+        #                for sl in segment_and_loop_specs]))
 
     def getLoopName(self):
         return self.loop_name
@@ -424,6 +424,11 @@ class X12Parser(object):
             c = ""
             while True:
                 c = self.f.read(1)
+
+                # HACK -- allow newlines in between segment separator
+                while not segname and not elem_chars and c in "\r\n":
+                    c = self.f.read(1)
+
                 if len(c) != 1:
                     self.__fail("error reading element/segment separator")
 

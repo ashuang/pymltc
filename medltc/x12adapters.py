@@ -132,13 +132,13 @@ class DTP(object):
 
         try:
             if self.format == "D8":
-                self.date = medltc.x12.ccyymmdd2date(d)
+                self.date = x12.ccyymmdd2date(d)
                 self.start_date = self.date
                 self.end_date = self.date
             elif self.format == "RD8":
                 sd, ed = d.split("-")
-                self.start_date = medltc.x12.ccyymmdd2date(sd)
-                self.end_date = medltc.x12.ccyymmdd2date(ed)
+                self.start_date = x12.ccyymmdd2date(sd)
+                self.end_date = x12.ccyymmdd2date(ed)
                 self.date = self.start_date
             else:
                 raise ValueError("Unrecognized date format [%s]" % self.format)
@@ -152,7 +152,7 @@ class Ansi835Remark(object):
         self.code = lq.getElement(2)
 
     def asStr(self):
-        return medltc.ansi835codes.RemarkCodeToStr(self.code_list, self.code)
+        return ansi835codes.RemarkCodeToStr(self.code_list, self.code)
 
 class Ansi835Adjustment(object):
     def __init__(self, group_code, reason_code, amount, quantity):
@@ -162,7 +162,7 @@ class Ansi835Adjustment(object):
         self.quantity = quantity
 
     def reasonAsStr(self):
-        return medltc.ansi835codes.ClaimAdjustmentReasonToStr(self.reason_code)
+        return ansi835codes.ClaimAdjustmentReasonToStr(self.reason_code)
 
 def _make_835_adjustments(cas):
     results = []
@@ -206,7 +206,7 @@ class Ansi835LineItemReport(object):
                 self.charged = Decimal(seg.getElement(2))
                 self.paid = Decimal(seg.getElement(3))
             elif segname == "DTM":
-                dval = medltc.x12.ccyymmdd2date(seg.getElement(2))
+                dval = x12.ccyymmdd2date(seg.getElement(2))
                 dtype = seg.getElement(1)
                 if dtype == "150":
                     self.svc_start_date = dval
@@ -310,7 +310,7 @@ class Ansi835ClaimReport(object):
                     self.refcodes[child.getElement(1)] = child.getElement(2)
                 elif segname == "DTM":
                     dtm_type = child.getElement(1)
-                    dtm_val = medltc.x12.ccyymmdd2date(child.getElement(2))
+                    dtm_val = x12.ccyymmdd2date(child.getElement(2))
                     if dtm_type == "036": # expiration
                         self.expire_date = dtm_val
                     elif dtm_type == "050": # received
@@ -344,7 +344,7 @@ class Ansi835ClaimReport(object):
                     pass
 
     def statusAsStr(self):
-        return medltc.ansi835codes.CLPStatusCodeToStr(self.clp_status_code)
+        return ansi835codes.CLPStatusCodeToStr(self.clp_status_code)
 
 class Ansi835Loop2000(object):
     def __init__(self, x12loop, first_report_index):
@@ -404,7 +404,7 @@ class Ansi835TransactionSet(object):
                         self.receiver_id = ref_val.strip()
                     # TODO "F2"
                 elif segname == "DTM":
-                    dval = medltc.x12.ccyymmdd2date(child.getElement(2))
+                    dval = x12.ccyymmdd2date(child.getElement(2))
                     if child.getElement(1) == "405":
                         self.production_date = dval
                 elif segname == "PLB":
@@ -597,7 +597,7 @@ class Ansi837pClaimLoop(object):
                     self.charged += sloop.charged
 
     def facilityCodeAsStr(self):
-        return medltc.ansi837p.facilityCodeToStr(self.facility_code)
+        return ansi837p.facilityCodeToStr(self.facility_code)
 
 class Ansi837pSubscriberLoop(object):
     def __init__(self, loop, first_claim_index):
@@ -755,7 +755,7 @@ class Ansi997DataElementNote(object):
         
         self.ref_num = ak4_seg.getElement(2)
         self.err_code = ak4_seg.getElement(3)
-        self.err_code_str = medltc.ansi997.elementSyntaxCodeToStr(self.err_code)
+        self.err_code_str = ansi997.elementSyntaxCodeToStr(self.err_code)
         if ak4_seg.numElements() >= 4:
             self.bad_elem = ak4_seg.getElement(4)
         else:
@@ -787,7 +787,7 @@ class Ansi997DataSegmentNote(object):
                 if nelem >= 4:
                     ec = child.getElement(4)
                     self.seg_err_code = ec
-                    self.seg_err_code_str = medltc.ansi997.segmentSyntaxCodeToStr(ec)
+                    self.seg_err_code_str = ansi997.segmentSyntaxCodeToStr(ec)
             elif segname == "AK4":
                 self.data_element_notes.append(Ansi997DataElementNote(child))
 
@@ -809,11 +809,11 @@ class Ansi997TransactionSetResponse(object):
                     self.ts_control_num = child.getElement(2)
                 elif segname == "AK5":
                     self.ts_ack_code = child.getElement(1)
-                    self.ts_ack_code_str = medltc.ansi997.transactionSetAckCodeToStr(self.ts_ack_code)
+                    self.ts_ack_code_str = ansi997.transactionSetAckCodeToStr(self.ts_ack_code)
                     for i in range(nelem - 1):
                         ec = child.getElement(i+2)
                         self.ts_err_codes.append(ec)
-                        self.ts_err_codes_str.append(medltc.ansi997.transactionSetSyntaxCodeToStr(ec))
+                        self.ts_err_codes_str.append(ansi997.transactionSetSyntaxCodeToStr(ec))
 
             elif child.isLoop():
                 loopname = child.getLoopName()
@@ -845,14 +845,14 @@ class Ansi997TransactionSet(object):
                     self.fg_control_num = child.getElement(2)
                 elif segname == "AK9":
                     self.fg_ack_code = child.getElement(1)
-                    self.fg_ack_code_str = medltc.ansi997.functionalGroupAckCodeToStr(self.fg_ack_code)
+                    self.fg_ack_code_str = ansi997.functionalGroupAckCodeToStr(self.fg_ack_code)
                     self.ts_num_included = int(child.getElement(2))
                     self.ts_num_received = int(child.getElement(3))
                     self.ts_num_accepted = int(child.getElement(4))
                     for i in range(nelem - 4):
                         ec = child.getElement(i+5)
                         self.fg_err_codes.append(ec)
-                        self.fg_err_codes_str.append(medltc.ansi997.functionalGroupSyntaxCodeToStr(ec))
+                        self.fg_err_codes_str.append(ansi997.functionalGroupSyntaxCodeToStr(ec))
             elif child.isLoop():
                 loopname = child.getLoopName()
                 if loopname == "AK2":
