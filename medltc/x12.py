@@ -496,7 +496,7 @@ class _X12DocumentHandler(X12Handler):
             raise X12ParseError("Invalid ISA11: [%s]" % icsi)
 
         icvn = isa.getElement(12)
-        if icvn != "00401":
+        if icvn not in [ "00401", "00501" ]:
             raise X12ParseError("Invalid ISA12: [%s]" % icvn)
 
         self.doc.isaICN = isa.getElement(13)
