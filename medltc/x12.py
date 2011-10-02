@@ -90,6 +90,8 @@ class X12Segment(object):
     def getSubElement(self, index, sub_index):
         e = self.elements[index-1]
         if type(e) != types.TupleType:
+            if sub_index == 1:
+                return e
             raise ValueError("%s%02d (pos %d) does not have sub-elements" % \
                     (self.name, index, self.st_seg_pos))
         return e[sub_index-1]
@@ -491,12 +493,16 @@ class _X12DocumentHandler(X12Handler):
         self.doc.isaDate = yymmdd2date(isa.getElement(9))
         self.doc.isaTime = hhmm2time(isa.getElement(10))
         
-        icsi = isa.getElement(11)
-        if icsi != "U":
-            raise X12ParseError("Invalid ISA11: [%s]" % icsi)
+        self.doc.isaControlVersion = isa.getElement(12)
 
-        icvn = isa.getElement(12)
-        if icvn not in [ "00401", "00501" ]:
+        if self.doc.isaControlVersion == "00501":
+            self.doc.isaRepetitionSeparator = isa.getElement(11)
+        elif self.doc.isaControlVersion == "00401":
+            self.doc.isaRepetitionSeparator = None
+            icsi = isa.getElement(11)
+            if icsi != "U":
+                raise X12ParseError("Invalid ISA11: [%s]" % icsi)
+        else:
             raise X12ParseError("Invalid ISA12: [%s]" % icvn)
 
         self.doc.isaICN = isa.getElement(13)
@@ -656,6 +662,8 @@ class X12Document(object):
         self.isaTime = None
         self.isaICN = None
         self.isaProduction = False
+        self.isaControlVersion = None
+        self.isaRepetitionSeparator = None
         self.all_segments = []
 
         self.ta1ICN = None
@@ -716,6 +724,12 @@ class X12Document(object):
 
     def getFunctionalGroups(self):
         return self.functional_groups
+
+    def getControlVersion(self):
+        return self.isaControlVersion
+
+#    def getRepetitionSeparator(self):
+#        return self.isaRepetitionSeparator
 
     def dump(self):
         for fg in self.functional_groups:
