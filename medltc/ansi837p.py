@@ -30,7 +30,7 @@ def getX12Spec837p():
     loop0_specs = \
       [ X12SegmentSpec("ST", "R", 1, _elemSpec1("837")), 
         X12SegmentSpec("BHT"),
-        X12SegmentSpec("REF"),
+        X12SegmentSpec("REF", "S"),
 
         # loop 1000A - Submitter name
         X12LoopSpec("1000A", 1,
