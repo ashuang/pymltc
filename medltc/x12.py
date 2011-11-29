@@ -503,6 +503,7 @@ class _X12DocumentHandler(X12Handler):
             if icsi != "U":
                 raise X12ParseError("Invalid ISA11: [%s]" % icsi)
         else:
+            icvn = self.doc.isaControlVersion
             raise X12ParseError("Invalid ISA12: [%s]" % icvn)
 
         self.doc.isaICN = isa.getElement(13)
