@@ -1,0 +1,2 @@
+This directory contains the MedLTC PGP public and private keys.  All files are
+PGP-encrypted.  Decrypt the files to get the keys and the key passphrase.
