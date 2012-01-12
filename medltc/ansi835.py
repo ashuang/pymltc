@@ -24,7 +24,7 @@ def getX12Spec835():
             X12SegmentSpec("N3"),
             X12SegmentSpec("N4"),
             X12SegmentSpec("REF", "O", 4),
-            X12SegmentSpec("PER", "O") ]),
+            X12SegmentSpec("PER", "O", 3) ]),
 
         # loop 1000B
         X12LoopSpec("1000B", 1,
