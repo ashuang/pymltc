@@ -33,7 +33,7 @@ __reasons = __get_reason_codes()
 
 def ClaimAdjustmentReasonToStr(code):
     try:
-        return __car2str_map[code]
+        return __reasons[code]
     except KeyError:
         return "UNKNOWN CODE!"
 

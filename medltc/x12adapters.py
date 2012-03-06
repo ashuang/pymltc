@@ -263,7 +263,7 @@ class Ansi835ClaimReport(object):
         self.claim_period_end = None
 
         self.amt_allowed = None
-
+        self.payer_ref_id = None
 
         self.refcodes = {}
 
@@ -280,8 +280,9 @@ class Ansi835ClaimReport(object):
 
                     if child.getElement(5):
                         self.patient_responsible = Decimal(child.getElement(5))
+                    self.payer_ref_id = child.getElement(7)
                 elif segname == "CAS":
-                    self.adjustments.extend(_make_835_adjustments(cas))
+                    self.adjustments.extend(_make_835_adjustments(child))
 
                 elif segname == "NM1":
                     nm1_type = child.getElement(1)
@@ -391,7 +392,7 @@ class Ansi835TransactionSet(object):
                     self.amount = Decimal(child.getElement(2))
                     self.credit_debit = child.getElement(3)
                     self.payment_method = child.getElement(4)
-                    self.payment_date = child.getElement(16)
+                    self.payment_date = x12.ccyymmdd2date(child.getElement(16))
                 elif segname == "TRN":
                     self.eft_trace_number = child.getElement(2)
                     self.trn_payer_id = child.getElement(3)

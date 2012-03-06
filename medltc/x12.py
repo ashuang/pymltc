@@ -582,8 +582,8 @@ class _X12DocumentHandler(X12Handler):
 
                 # uh oh.  did not match a required segment.
 #                print "  Unable to match %s to a loop" % segname
-                raise X12ParseError("In loop %s - expected %s, got %s\n[%s]" % \
-                        (lp.loopSpec.getLoopName(), spec.getSegName(), segname, seg.format()))
+                raise X12ParseError("In loop %s - error matching on segment %s\n[%s]" % \
+                        (lp.loopSpec.getLoopName(), segname, seg.format()))
             else:
 #                dbg("  skipping [%s]" % spec.getSegName())
                 # did not match, but the next segment was not required
