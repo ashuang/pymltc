@@ -222,8 +222,8 @@ class Ansi999DataElementNote(object):
 
     def dump(self):
         print ""
-        print "     Position: %s" % self.pos
-        print "     Error:    %s" % self.err_code_str
+        print "     Position: %s" % str(self.pos)
+        print "     Error:    %s" % str(self.err_code_str)
         if self.bad_elem:
             print "     Bad Element: %s" % self.bad_elem
         for elem_ctx in self.element_contexts:
