@@ -344,6 +344,12 @@ class Ansi835ClaimReport(object):
                     # TODO
                     pass
 
+        if self.amt_allowed is None:
+            self.amt_allowed = Decimal(0)
+            for svc in self.line_item_reports:
+                if svc.amt_allowed is not None:
+                    self.amt_allowed += svc.amt_allowed
+
     def statusAsStr(self):
         return ansi835codes.CLPStatusCodeToStr(self.clp_status_code)
 
