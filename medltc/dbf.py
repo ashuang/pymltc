@@ -38,7 +38,7 @@ def ccyymmdd2date(ccyymmdd):
     return date(year, month, day)
 
 def date2ccyymmdd(d):
-    return d.strftime("%Y%m%d")
+    return "%04d%02d%02d" % (d.year, d.month, d.day)
 
 class field:
     def __init__(self, rawtext, offset):
@@ -115,9 +115,10 @@ class record:
 
         self.deleted = (rawtext[0] == '\x2a')
         if rawtext[0] not in [ '\x2a', '\x20' ]:
-            pass
+#            pass
 #            import sys
 #            sys.stderr.write("invalid delete flag 0x%X\n" % ord(rawtext[0]))
+            raise ValueError("invalid delete flag")
         for fld in fields:
             rawval = rawtext[fld.offset:fld.offset + fld.len]
             if fld.type == "C":
@@ -480,7 +481,7 @@ class dbf:
         if self.eof(): raise ValueError("EOF")
         if self.record.deleted:
             self.record.deleted = False
-            self.f.write("\x2a")
+            self.f.write("\x20")
             self.f.seek(-1,1)
 
     def pack(self):
@@ -644,34 +645,11 @@ if __name__ == "__main__":
     a.go(0)
     while not a.eof():
         print "============= %d / %d" % (a.position, a.nrecs)
-        print "deleted: %s" % str(a.r.deleted)
-        a.r.prettyPrint()
-        print "[%s]" % a.r.get_rawtext()
+        print "deleted: %s" % str(a.record.deleted)
+        a.record.prettyPrint()
+        print "[%s]" % a.record.get_rawtext()
         a.skip(1)
     a.skip(-8)
     print "============= %d / %d" % (a.position, a.nrecs)
     print "deleted: %s" % str(a.r.deleted)
     a.r.prettyPrint()
-
-# $Log: dbf.py,v $
-# Revision 1.4  2006/07/14 22:30:16  albert
-# month/day swap
-#
-# Revision 1.3  2006/07/14 16:43:10  albert
-# *** empty log message ***
-#
-# Revision 1.2  2006/07/09 16:40:14  albert
-# *** empty log message ***
-#
-# Revision 1.4  2006/05/06 18:40:48  albert
-# create
-#
-# Revision 1.3  2005/09/03 20:03:03  albert
-# open dbf files in binary mode
-#
-# Revision 1.2  2005/06/26 18:07:28  albert
-# *** empty log message ***
-#
-# Revision 1.1  2005/06/25 05:21:49  albert
-# *** empty log message ***
-#
