@@ -181,6 +181,8 @@ class Ansi999SegmentElementContext(object):
             self.ref_in_seg = child.getElement(6)
 
     def dump(self, indent):
+        if self.reference is None:
+            return
         line = [ self.reference ]
         if self.loop_id is not None:
             line.append("Loop: %s" % self.loop_id)
