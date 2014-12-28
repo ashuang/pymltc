@@ -196,7 +196,7 @@ class SimpleHandler(X12Handler):
 
     def startTransactionSet(self, st_segment):
         print "    [ST]"
-    
+
     def endTransactionSet(self, se_segment):
         print "    [SE]"
 
@@ -206,16 +206,25 @@ class SimpleHandler(X12Handler):
     def segment(self, segname, seg):
         print "      [%s]" % segname
 
-class X12ElementSpec(object):
-    def __init__(self, index, *values):
+class X12ElementIsOneOfSpec(object):
+    def __init__(self, index, *possible_values):
         self.index = index
-        self.values = values
+        self.possible_values = possible_values
 
-    def getIndex(self):
-        return self.index
+    def matchesSegment(self, seg):
+        return seg.getElement(self.index) in self.possible_values
 
-    def getValues(self):
-        return self.values
+class X12ElementEquals(object):
+    """Tests if a segment element has an expected value.
+
+    This is an element spec used in an X12SegmentSpec.
+    """
+    def __init__(self, index, value):
+        self._index = index
+        self._value = value
+
+    def matchesSegment(self, seg):
+        return seg.getElement(self._index) == self._value
 
 class X12SegmentSpec(object):
     def __init__(self, name, usage = "R", max_repeat = 1, element_specs = []):
@@ -230,7 +239,7 @@ class X12SegmentSpec(object):
         if max_repeat < 1:
             raise ValueError("Invalid max_repeat")
 
-#        assert(all([isinstance(es, X12ElementSpec) for es in element_specs]))
+#        assert(all([isinstance(es, X12ElementIsOneOfSpec) for es in element_specs]))
 
     def isSegmentSpec(self):
         return True
@@ -254,9 +263,10 @@ class X12SegmentSpec(object):
         return self.element_specs
 
     def matchesSegment(self, seg):
-        if seg.name != self.name: return False
+        if seg.name != self.name:
+            return False
         for espec in self.elem_specs:
-            if seg.getElement(espec.index) not in espec.values:
+            if not espec.matchesSegment(seg):
                 return False
         return True
 
@@ -303,7 +313,7 @@ class X12LoopSpec(object):
         print ("%sLoop %s" % (("  " * indent), self.loop_name))
         for spec in self.specs:
             spec.dump(indent+1)
-    
+
 class X12Parser(object):
     def __init__(self):
         pass
@@ -328,7 +338,7 @@ class X12Parser(object):
         # the first element separator defines the element separator to be used
         # throughout the entire interchange
         self.elem_sep = f.read(1)
-        
+
         # read the ISA fields into an array
         elements = []
         # read in the next 15 fields all at once.  Field lengths are defined in
@@ -336,7 +346,7 @@ class X12Parser(object):
         for i in [ 2, 10, 2, 10, 2, 15, 2, 15, 6, 4, 1, 5, 9, 1, 1 ]:
             s = f.read(i)
             c = f.read(1)
-            if c != self.elem_sep: 
+            if c != self.elem_sep:
                 raise X12ParseError("element separator not found! %s" % c)
             elements.append(s)
         elements.append(f.read(1))
@@ -364,7 +374,7 @@ class X12Parser(object):
 
         n_functional_groups = 0
         while True:
-            # expect GS on first loop.  On subsequent loops, IEA is ok.  
+            # expect GS on first loop.  On subsequent loops, IEA is ok.
             # TA1 is also ok
             seg = self.__readSegment()
             if seg.getName() == "GS":
@@ -600,7 +610,7 @@ class _X12DocumentHandler(X12Handler):
                 lp.loop_repeat += 1
                 lp.index = 1
                 lp.segment_repeat = 0
-                
+
                 newloop = X12Loop(lp.loopSpec.getLoopName())
                 newloop.add(seg)
                 self.loopStack[-2].loop.add(newloop)
@@ -775,6 +785,28 @@ __ta1_acknowledgment_codes = { \
         'A' : 'The Transmitted Interchange Control Structure Header and Trailer Have Been Received and Have No Errors.',
         'E' : 'The Transmitted Interchange Control Structure Header and Trailer Have Been Received and Are Accepted But Errors Are Noted. This Means the Sender Must Not Resend This Data.',
         'R' : 'The Transmitted Interchange Control Structure Header and Trailer are Rejected Because of Errors.' }
+
+def print_loop(loop, seg_count, indent):
+    indent_str = "  " * indent
+    for child in loop.getChildren():
+        if child.isLoop():
+            print "    %s (loop %s) [" % (indent_str, child.getLoopName())
+            seg_count = print_loop(child, seg_count, indent + 1)
+            print "    %s ] (end loop %s)" % (indent_str, child.getLoopName())
+        else:
+            assert child.isSegment()
+            sys.stdout.write("%4d%s %s\n" % (seg_count, indent_str,
+#            sys.stdout.write("%4d %s %s\n" % (indent_str, seg_count,
+                child.format()))#", ".join(child.getElements())))
+            seg_count += 1
+    return seg_count
+
+def print_document(x12doc):
+    for fg in x12doc.functional_groups:
+        for ts in fg.transaction_sets:
+            print_loop(ts.getRootLoop(), 1, 0)
+
+#    if a277cadoc.functional_groups[0].transaction_sets[0].information_receiver.rejected_num > 0:
 
 def ta1NoteCodeToStr(note_code):
     return __ta1_note_codes[note_code]

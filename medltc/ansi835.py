@@ -11,7 +11,7 @@ def getX12Spec835():
         return _ansi835_spec
 
     loop0_specs = \
-      [ X12SegmentSpec("ST", "R", 1, [ X12ElementSpec(1, "835") ]), 
+      [ X12SegmentSpec("ST", "R", 1, [ X12ElementIsOneOfSpec(1, "835") ]), 
         X12SegmentSpec("BPR"),
         X12SegmentSpec("TRN"),
         X12SegmentSpec("CUR", "O"),

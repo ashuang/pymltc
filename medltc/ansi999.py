@@ -11,7 +11,7 @@ def getX12Spec999():
         return _ansi999_spec
 
     loop0_specs = \
-      [ X12SegmentSpec("ST", "R", 1, [ X12ElementSpec(1, "999") ]), 
+      [ X12SegmentSpec("ST", "R", 1, [ X12ElementIsOneOfSpec(1, "999") ]), 
         X12SegmentSpec("AK1", "R", 1),
 
         # loop AK2

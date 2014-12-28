@@ -7,11 +7,11 @@ from x12 import *
 _ansi837p_spec = None
 
 def _elemSpec1(*vals):
-    return [ X12ElementSpec(1, *vals) ]
+    return [ X12ElementIsOneOfSpec(1, *vals) ]
 def _elemSpec2(*vals):
-    return [ X12ElementSpec(2, *vals) ]
+    return [ X12ElementIsOneOfSpec(2, *vals) ]
 def _elemSpec3(*vals):
-    return [ X12ElementSpec(3, *vals) ]
+    return [ X12ElementIsOneOfSpec(3, *vals) ]
 
 _2010AA_BP_ES = _elemSpec1("0B", "1A", "1B", "1C", "1D", "1G", "1H", "1J", 
                     "B3", "BQ", "EI", "FH", "G2", "G5", "LU", "SY", 

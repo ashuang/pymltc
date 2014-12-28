@@ -11,7 +11,7 @@ def getX12Spec997():
         return _ansi997_spec
 
     loop0_specs = \
-      [ X12SegmentSpec("ST", "R", 1, [ X12ElementSpec(1, "997") ]), 
+      [ X12SegmentSpec("ST", "R", 1, [ X12ElementIsOneOfSpec(1, "997") ]), 
         X12SegmentSpec("AK1", "R", 1),
 
         # loop AK2

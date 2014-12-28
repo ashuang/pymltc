@@ -6,6 +6,14 @@ import ansi835
 import ansi835codes
 import ansi997
 
+class ReferenceInformation(object):
+    def __init__(self, ref_seg):
+        self.qualifer = ref_seg.getElement(1)
+        self.identification = ref_seg.getElement(2)
+
+    def __str__(self):
+        return "(%s, %s)" % (self.qualifer, self.identification)
+
 class NM1(object):
     def __init__(self, nm1_seg):
         nelem = nm1_seg.numElements()
@@ -48,7 +56,7 @@ class NM1(object):
 
     def nameAsStr(self):
         return self.__namestr
-        
+
     def nameAndId(self):
         if self.id_code:
             idstr = "[%s] %s" % (self.id_code_type, self.id_code)
@@ -145,6 +153,11 @@ class DTP(object):
         except Exception, ex:
             raise ValueError("DTP (pos %d) - Invalid date: %s" % (dtp_seg.st_seg_pos, str(ex)))
 
+    def __str__(self):
+        if self.format == "D8":
+            return str(self.date)
+        else:
+            return "%s - %s" % (self.start_date, self.end_date)
 
 class Ansi835Remark(object):
     def __init__(self, lq):
