@@ -103,6 +103,9 @@ class X12Segment(object):
         else:
             return len(e)
 
+    def getSegmentPosition(self):
+        return self.st_seg_pos
+
     def setSegmentPosition(self, pos):
         self.st_seg_pos = pos
 
@@ -168,7 +171,7 @@ class X12Handler(object):
 
     def startTransactionSet(self, st_segment):
         pass
-    
+
     def endTransactionSet(self, se_segment):
         pass
 
@@ -180,31 +183,35 @@ class X12Handler(object):
 
 class SimpleHandler(X12Handler):
     def __init__(self):
+        self._seg_count = 0
         pass
 
     def startInterchangeControl(self, isa_segment):
-        print "[ISA]"
+        print "      %s" % isa_segment.format()
 
     def endInterchangeControl(self, iea_segment):
-        print "[IEA]"
+        print "      %s" % iea_segment.format()
 
     def startFunctionalGroup(self, gs_segment):
-        print "  [GS]"
+        print "      %s" % gs_segment.format()
 
     def endFunctionalGroup(self, ge_segment):
-        print "  [GE]"
+        print "      %s" % ge_segment.format()
 
-    def startTransactionSet(self, st_segment):
-        print "    [ST]"
+    def startTransactionSet(self, seg):
+        self._seg_count += 1
+        print "%5d %s" % (self._seg_count, seg.format())
 
-    def endTransactionSet(self, se_segment):
-        print "    [SE]"
+    def endTransactionSet(self, seg):
+        self._seg_count += 1
+        print "%5d %s" % (self._seg_count, seg.format())
 
     def interchangeAcknowledgment(self, ta1):
-        print "  [TA1]"
+        print "      %s" % ta1.format()
 
     def segment(self, segname, seg):
-        print "      [%s]" % segname
+        self._seg_count += 1
+        print "%5d %s" % (self._seg_count, seg.format())
 
 class X12ElementIsOneOfSpec(object):
     def __init__(self, index, *possible_values):
@@ -399,8 +406,8 @@ class X12Parser(object):
                 seg = self.__readSegment()
                 if seg.getName() == "ST":
                     self.handler.startTransactionSet(seg)
-                    seg.setSegmentPosition(1)
-                    self.st_seg_pos += 1
+                    self.st_seg_pos = 1
+                    seg.setSegmentPosition(self.st_seg_pos)
                     n_transaction_sets += 1
                 elif n_transaction_sets == 0:
                     self.__fail("Expected ST segment, got [%s]\n" % seg.getName())
@@ -412,8 +419,8 @@ class X12Parser(object):
 
                 while True:
                     seg = self.__readSegment()
-                    seg.setSegmentPosition(self.st_seg_pos)
                     self.st_seg_pos += 1
+                    seg.setSegmentPosition(self.st_seg_pos)
                     if seg.getName() == "SE":
                         self.handler.endTransactionSet(seg)
                         break
@@ -592,8 +599,9 @@ class _X12DocumentHandler(X12Handler):
 
                 # uh oh.  did not match a required segment.
 #                print "  Unable to match %s to a loop" % segname
-                raise X12ParseError("In loop %s - error matching on segment %s\n[%s]" % \
-                        (lp.loopSpec.getLoopName(), segname, seg.format()))
+                raise X12ParseError("Segment %d in loop %s - error matching on segment %s\n[%s]" % \
+                        (seg.getSegmentPosition(),
+                            lp.loopSpec.getLoopName(), segname, seg.format()))
             else:
 #                dbg("  skipping [%s]" % spec.getSegName())
                 # did not match, but the next segment was not required

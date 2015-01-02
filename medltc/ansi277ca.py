@@ -79,7 +79,7 @@ def get_x12_spec_277ca():
                  ]),
            ]),
 
-        X12LoopSpec("2000C", 99999,
+        X12LoopSpec("2000C", 999999,
             [X12SegmentSpec("HL", "O", 1, [X12ElementEquals(3, "19")]),
 
               X12LoopSpec("2100C", 1, [X12SegmentSpec("NM1"),]),
@@ -95,12 +95,12 @@ def get_x12_spec_277ca():
                  ]),
            ]),
 
-        X12LoopSpec("2000D", 99999,
+        X12LoopSpec("2000D", 999999,
             [X12SegmentSpec("HL", "O", 1, [X12ElementEquals(3, "PT")]),
 
               X12LoopSpec("2100D", 1, [X12SegmentSpec("NM1"),]),
 
-              X12LoopSpec("2200D_claim_status_tracking_number", 1,
+              X12LoopSpec("2200D_claim_status_tracking_number", 999999,
                   [X12SegmentSpec("TRN", "R", 1),
                     X12SegmentSpec("STC", "R", 999999),
                     X12SegmentSpec("REF", "O", 1),
@@ -110,7 +110,7 @@ def get_x12_spec_277ca():
 
                     X12LoopSpec("2200D_service_line_information", 1,
                         [X12SegmentSpec("SVC", "O", 1),
-                          X12SegmentSpec("STC", "R", 99999),
+                          X12SegmentSpec("STC", "R", 999999),
                           X12SegmentSpec("REF", "R", 1),
                           X12SegmentSpec("REF", "S", 1),
                           X12SegmentSpec("DTP", "S", 1)

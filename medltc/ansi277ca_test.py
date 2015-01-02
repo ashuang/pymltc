@@ -8,11 +8,18 @@ _DATA_DIR=os.path.join("test_data", "277ca")
 
 def _get_test_files(group):
     bnames = os.listdir(os.path.join(_DATA_DIR, group))
-    return [ os.path.join(_DATA_DIR, group, bname) for bname in bnames ]
+    fnames = [ os.path.join(_DATA_DIR, group, bname) for bname in bnames ]
+    return [ fname for fname in fnames if os.path.isfile(fname) ]
 
 class TestAnsi277CA(unittest.TestCase):
     def test_medicare(self):
         for fname in _get_test_files("medicare"):
+            file_obj = open(fname)
+            a277cax12 = ansi277ca.parse_277ca(file_obj)
+            a277cadoc = ansi277ca.Ansi277caDocument(a277cax12)
+
+    def test_uhc(self):
+        for fname in _get_test_files("uhc"):
             file_obj = open(fname)
             a277cax12 = ansi277ca.parse_277ca(file_obj)
             a277cadoc = ansi277ca.Ansi277caDocument(a277cax12)
