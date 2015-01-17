@@ -326,9 +326,6 @@ class PatientClaimDetail(object):
                 assert child.getLoopName() == "2200D_service_line_information"
                 self.line_items.append(LineItemDetail(child))
 
-    def get_status(self):
-        return self.status
-
     def dump(self):
         print "  claim:"
         print "  reference id: %s" % self.reference_id
@@ -364,7 +361,7 @@ class PatientDetail(object):
 
     def has_rejections(self):
         for claim in self.claims:
-            if not claim.get_status().is_accepted():
+            if not claim.status.is_accepted():
                 return True
         return False
 
@@ -607,7 +604,7 @@ class Ansi277caDocument(object):
 
 def _report_patient(patient):
     for claim in patient.get_claims():
-        if claim.get_status().is_accepted():
+        if claim.status.is_accepted():
             continue
 
         print ""
