@@ -595,6 +595,7 @@ class Ansi277caDocument(object):
 
         self.functional_groups = [Ansi277caFunctionalGroup(fgroup) for \
                 fgroup in x12doc.getFunctionalGroups()]
+        self.x12doc = x12doc
 
     def dump(self):
         print "ANSI277ca Document Date: %s  %s" % (self.isa_date, self.isa_time)
