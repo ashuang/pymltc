@@ -15,20 +15,18 @@ class TestAnsi277CA(unittest.TestCase):
     def test_medicare(self):
         for fname in _get_test_files("medicare"):
             file_obj = open(fname)
-            a277cax12 = ansi277ca.parse_277ca(file_obj)
-            a277cadoc = ansi277ca.Ansi277caDocument(a277cax12)
+            a277cadoc = ansi277ca.Ansi277caDocument(file_obj)
 
     def test_uhc(self):
         for fname in _get_test_files("uhc"):
             file_obj = open(fname)
-            a277cax12 = ansi277ca.parse_277ca(file_obj)
-            a277cadoc = ansi277ca.Ansi277caDocument(a277cax12)
+            a277cadoc = ansi277ca.Ansi277caDocument(file_obj)
 
     def test_malformed(self):
         for fname in _get_test_files("malformed"):
             file_obj = open(fname)
             self.assertRaises(x12.X12ParseError,
-                    ansi277ca.parse_277ca, file_obj)
+                    ansi277ca.parse_x12_doc, file_obj)
 
 if __name__ == "__main__":
     unittest.main()

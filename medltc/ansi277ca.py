@@ -122,12 +122,12 @@ def get_x12_spec_277ca():
 
     return X12LoopSpec("0", 1, specs)
 
-def parse_277ca(file_object):
+def parse_x12_doc(file_object):
     return X12Document(file_object, get_x12_spec_277ca())
 
 def is_file_ansi_277ca(file_object):
     try:
-        parse_277ca(file_object)
+        parse_x12_doc(file_object)
     except X12ParseError:
         return False
     return True
@@ -584,7 +584,9 @@ class Ansi277caFunctionalGroup(object):
             tset.dump()
 
 class Ansi277caDocument(object):
-    def __init__(self, x12doc):
+    def __init__(self, file_obj):
+        x12doc = X12Document(file_obj, get_x12_spec_277ca())
+
         self.isa_date = x12doc.getDocumentDate()
         self.isa_time = x12doc.getDocumentTime()
         self.isa_sender = x12doc.getSenderID()
@@ -653,18 +655,18 @@ def main():
             help='ANSI X12 277CA document filename')
     args = arg_parser.parse_args()
 
-    file_obj = file(args.filename, 'r')
+    file_obj = open(args.filename, 'r')
 
     try:
-        a277cax12 = parse_277ca(file_obj)
-        a277cadoc = Ansi277caDocument(a277cax12)
+        a277cadoc = Ansi277caDocument(file_obj)
     except ValueError:
         print "file does not appear to be an ANSI 277ca file!"
         traceback.print_exc()
         sys.exit(1)
 
     if args.show_parse:
-        x12.print_document(a277cax12)
+        file_obj.seek(0, 0)
+        x12.print_document(parse_x12_doc(file_obj))
         sys.exit(0)
 
     for fgroup in a277cadoc.functional_groups:
