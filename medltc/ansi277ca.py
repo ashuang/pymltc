@@ -167,11 +167,11 @@ class HealthCareClaimStatus(object):
 class StatusInformation(object):
     """Describes an STC segment"""
     def __init__(self, stc_segment):
-        self.statuses = [HealthCareClaimStatus(stc_segment, 1)]
+        self.substatuses = [HealthCareClaimStatus(stc_segment, 1)]
         if stc_segment.numElements() >= 10 and len(stc_segment.getElement(10)):
-            self.statuses.append(HealthCareClaimStatus(stc_segment, 10))
+            self.substatuses.append(HealthCareClaimStatus(stc_segment, 10))
         if stc_segment.numElements() >= 11 and len(stc_segment.getElement(11)):
-            self.statuses.append(HealthCareClaimStatus(stc_segment, 11))
+            self.substatuses.append(HealthCareClaimStatus(stc_segment, 11))
         datestr = stc_segment.getElement(2).strip()
         if datestr:
             self.date = ccyymmdd2date(datestr)
@@ -189,15 +189,12 @@ class StatusInformation(object):
     def is_accepted(self):
         return self.action_code == "WQ"
 
-    def get_statuses(self):
-        return self.statuses
-
     def __str__(self):
         lines = ["date: %s" % self.date,
                 "action code: %s" % self.action_code,
                 "monetary amount: %s" % self.monetary_amount]
-        for status in self.statuses:
-            lines.append("claim status: %s" % str(status))
+        for substatus in self.substatuses:
+            lines.append("substatus: %s" % str(substatus))
         return "\n".join(["  %s" % line for line in lines])
 
 class InformationSource(object):
@@ -247,7 +244,7 @@ class InformationSource(object):
 
 class LineItemDetail(object):
     def __init__(self, loop):
-        self.status = None
+        self.statuses = []
         self.ident = None
         self.pharmacy_prescription_number = None
         self.date = None
@@ -269,7 +266,7 @@ class LineItemDetail(object):
                 self.monetary_amount = \
                         Decimal(child.getElement(2)).quantize(TWOPLACES)
             elif child.getName() == "STC":
-                self.status = StatusInformation(child)
+                self.statuses.append(StatusInformation(child))
             elif child.getName() == "REF" and \
                     child.getElement(1) == "FJ":
                 self.ident = \
@@ -281,6 +278,9 @@ class LineItemDetail(object):
             elif child.getName() == "DTP":
                 self.date = x12adapters.DTP(child)
 
+    def is_accepted(self):
+        return all([status.is_accepted() for status in self.statuses])
+
     def dump(self):
         print "      %s" % str(self.ident)
         print "      date: %s" % str(self.date)
@@ -290,12 +290,13 @@ class LineItemDetail(object):
         print "      procedure code: %s / %s" % (self.procedure_code_qualifier,
             self.procedure_code)
         print "      monetary amount: %s" % str(self.monetary_amount)
-        print "      %s" % str(self.status)
+        for status in self.statuses:
+            print "      %s" % str(self.status)
 
 class PatientClaimDetail(object):
     def __init__(self, loop):
         self.reference_id = None
-        self.status = None
+        self.statuses = []
         self.payer_claim_contol_number = None
         self.intermediary_id = None
         self.institutional_bill_type_id = None
@@ -307,7 +308,7 @@ class PatientClaimDetail(object):
                 if child.getName() == "TRN":
                     self.reference_id = child.getElement(2)
                 elif child.getName() == "STC":
-                    self.status = StatusInformation(child)
+                    self.statuses.append(StatusInformation(child))
                 elif child.getName() == "REF" and \
                         child.getElement(1) == "1K":
                     self.payer_claim_contol_number = \
@@ -326,10 +327,14 @@ class PatientClaimDetail(object):
                 assert child.getLoopName() == "2200D_service_line_information"
                 self.line_items.append(LineItemDetail(child))
 
+    def is_accepted(self):
+        return all([status.is_accepted() for status in self.statuses])
+
     def dump(self):
         print "  claim:"
         print "  reference id: %s" % self.reference_id
-        print "  status:\n%s" % str(self.status)
+        for status in self.statuses:
+            print "  %s" % str(status)
         if len(self.line_items):
             print "  line items:"
             for line_item in self.line_items:
@@ -361,7 +366,7 @@ class PatientDetail(object):
 
     def has_rejections(self):
         for claim in self.claims:
-            if not claim.status.is_accepted():
+            if not claim.is_accepted():
                 return True
         return False
 
@@ -380,7 +385,7 @@ class BillingProviderDetail(object):
         self.nm1 = None
 
         self.reference_id = None
-        self.status = None
+        self.statuses = []
         self.secondary_id = None
 
         self.accepted_num = 0
@@ -409,7 +414,7 @@ class BillingProviderDetail(object):
                     if grandchild.getName() == "TRN":
                         self.reference_id = grandchild.getElement(2)
                     elif grandchild.getName() == "STC":
-                        self.status = StatusInformation(grandchild)
+                        self.statuses.append(StatusInformation(grandchild))
                     elif grandchild.getName() == "REF":
                         self.secondary_id = \
                                 x12adapters.ReferenceInformation(grandchild)
@@ -453,7 +458,6 @@ class BillingProviderDetail(object):
             print "  secondary id: %s" % str(self.secondary_id)
         print "  accepted: %s (%s)" % (self.accepted_num, self.accepted_amt)
         print "  rejected: %s (%s)" % (self.rejected_num, self.rejected_amt)
-#        print "  status:\n%s" % str(self.status)
 
         if self.patient_details:
             print "  Patients:"
@@ -468,7 +472,7 @@ class InformationReceiver(object):
         self.nm1 = None
         self.reference_id = None
 
-        self.status = None
+        self.statuses = []
 
         self.accepted_num = 0
         self.rejected_num = 0
@@ -492,7 +496,7 @@ class InformationReceiver(object):
                         if grandchild.getName() == "TRN":
                             self.reference_id = grandchild.getElement(2)
                         elif grandchild.getName() == "STC":
-                            self.status = StatusInformation(grandchild)
+                            self.statuses.append(StatusInformation(grandchild))
                         elif grandchild.getName() == "QTY" and \
                                 grandchild.getElement(1) == "90":
                             elem_2 = grandchild.getElement(2)
@@ -604,27 +608,29 @@ class Ansi277caDocument(object):
 
 def _report_patient(patient):
     for claim in patient.get_claims():
-        if claim.status.is_accepted():
+        if claim.is_accepted():
             continue
 
         print ""
         print "patient: %s" % patient.nm1.nameAsStr()
         print "claim id: %s" % claim.reference_id
-        for status in claim.status.get_statuses():
-            print "  status: (%s) %s" % (status.category_code,
-                    status.category_code_str())
-            print "  detail: (%s) / %s" % (status.industry_code,
-                    status.industry_code_str())
+        for status in claim.statuses:
+            for substatus in status.substatuses:
+                print "  (%s) %s" % (substatus.category_code,
+                        substatus.category_code_str())
+                print "  (%s) / %s" % (substatus.industry_code,
+                        substatus.industry_code_str())
 
         for line_item in claim.line_items:
-            if not line_item.status.is_accepted():
+            if not line_item.is_accepted():
                 print "  line item: %s" % \
                         line_item.ident.identification
-                for li_status in line_item.status.get_statuses():
-                    print "    status: (%s) %s" % (li_status.category_code,
-                            li_status.category_code_str())
-                    print "    detail: (%s) %s" % (li_status.industry_code,
-                            li_status.industry_code_str())
+                for li_status in line_item.statuses:
+                    for li_substatus in li_status.substatuses:
+                        print "    (%s) %s" % (li_substatus.category_code,
+                                li_substatus.category_code_str())
+                        print "    (%s) %s" % (li_substatus.industry_code,
+                                li_substatus.industry_code_str())
 
 def text_report(doc):
     print "277CA Document version: %s From: %s Time: %s %s" % (doc.isa_version,
