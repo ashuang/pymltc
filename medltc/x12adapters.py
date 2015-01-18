@@ -154,7 +154,7 @@ class DTP(object):
             raise ValueError("DTP (pos %d) - Invalid date: %s" % (dtp_seg.st_seg_pos, str(ex)))
 
     def __str__(self):
-        if self.format == "D8":
+        if self.format == "D8" or self.start_date == self.end_date:
             return str(self.date)
         else:
             return "%s - %s" % (self.start_date, self.end_date)
