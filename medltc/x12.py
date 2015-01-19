@@ -509,10 +509,10 @@ class _X12DocumentHandler(X12Handler):
         self.doc.isaReceiverID = isa.getElement(8)
         self.doc.isaDate = yymmdd2date(isa.getElement(9))
         self.doc.isaTime = hhmm2time(isa.getElement(10))
-        
+
         self.doc.isaControlVersion = isa.getElement(12)
 
-        if self.doc.isaControlVersion == "00501":
+        if self.doc.isaControlVersion in ["00404", "00501"]:
             self.doc.isaRepetitionSeparator = isa.getElement(11)
         elif self.doc.isaControlVersion == "00401":
             self.doc.isaRepetitionSeparator = None
