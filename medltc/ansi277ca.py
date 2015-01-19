@@ -330,6 +330,11 @@ class PatientClaimDetail(object):
     def is_accepted(self):
         return all([status.is_accepted() for status in self.statuses])
 
+    def get_amount(self):
+        if not self.statuses:
+            return 0
+        return self.statuses[0].monetary_amount
+
     def dump(self):
         print "  claim:"
         print "  reference id: %s" % self.reference_id
@@ -370,6 +375,24 @@ class PatientDetail(object):
                 return True
         return False
 
+    def get_accepted_num(self):
+        result = 0
+        for claim in self.claims:
+            if claim.is_accepted():
+                result += 1
+        return result
+
+    def get_rejected_num(self):
+        return len(self.claims) - self.get_accepted_num()
+
+    def get_accepted_amount(self):
+        return sum([claim.get_amount() for claim in self.claims if \
+                claim.is_accepted()])
+
+    def get_rejected_amount(self):
+        return sum([claim.get_amount() for claim in self.claims if \
+                not claim.is_accepted()])
+
     def get_claims(self):
         return self.claims
 
@@ -387,11 +410,6 @@ class BillingProviderDetail(object):
         self.reference_id = None
         self.statuses = []
         self.secondary_id = None
-
-        self.accepted_num = 0
-        self.accepted_amt = 0
-        self.rejected_num = 0
-        self.rejected_amt = 0
 
         self.patient_details = []
 
@@ -418,22 +436,28 @@ class BillingProviderDetail(object):
                     elif grandchild.getName() == "REF":
                         self.secondary_id = \
                                 x12adapters.ReferenceInformation(grandchild)
-                    elif grandchild.getName() == "QTY" and \
-                            grandchild.getElement(1) == "QA":
-                        elem_2 = grandchild.getElement(2)
-                        self.accepted_num = int(elem_2)
-                    elif grandchild.getName() == "QTY" and \
-                            grandchild.getElement(1) == "QC":
-                        elem_2 = grandchild.getElement(2)
-                        self.rejected_num = int(elem_2)
-                    elif grandchild.getName() == "AMT" and \
-                            grandchild.getElement(1) == "YU":
-                        elem_2 = grandchild.getElement(2)
-                        self.accepted_amt = Decimal(elem_2).quantize(TWOPLACES)
-                    elif grandchild.getName() == "AMT" and \
-                            grandchild.getElement(1) == "YY":
-                        elem_2 = grandchild.getElement(2)
-                        self.rejected_amt = Decimal(elem_2).quantize(TWOPLACES)
+                    # Ignore the QTY and AMT segments, because sometimes they
+                    # don't add up to the actual amounts listed in the 2000D
+                    # loops. I'm looking at you, Ingenix.
+                    # Instead, to get these amounts, directly sum up the 2000D
+                    # loops.
+                    #
+                    #elif grandchild.getName() == "QTY" and \
+                    #        grandchild.getElement(1) == "QA":
+                    #    elem_2 = grandchild.getElement(2)
+                    #    self.accepted_num = int(elem_2)
+                    #elif grandchild.getName() == "QTY" and \
+                    #        grandchild.getElement(1) == "QC":
+                    #    elem_2 = grandchild.getElement(2)
+                    #    self.rejected_num = int(elem_2)
+                    #elif grandchild.getName() == "AMT" and \
+                    #        grandchild.getElement(1) == "YU":
+                    #    elem_2 = grandchild.getElement(2)
+                    #    self.accepted_amt = Decimal(elem_2).quantize(TWOPLACES)
+                    #elif grandchild.getName() == "AMT" and \
+                    #        grandchild.getElement(1) == "YY":
+                    #    elem_2 = grandchild.getElement(2)
+                    #    self.rejected_amt = Decimal(elem_2).quantize(TWOPLACES)
 
     def add_patient_detail(self, patient_detail):
         self.patient_details.append(patient_detail)
@@ -447,6 +471,18 @@ class BillingProviderDetail(object):
                 return True
         return False
 
+    def get_accepted_num(self):
+        return sum([pd.get_accepted_num() for pd in self.patient_details])
+
+    def get_rejected_num(self):
+        return sum([pd.get_rejected_num() for pd in self.patient_details])
+
+    def get_accepted_amount(self):
+        return sum([pd.get_accepted_amount() for pd in self.patient_details])
+
+    def get_rejected_amount(self):
+        return sum([pd.get_rejected_amount() for pd in self.patient_details])
+
     def get_nm1(self):
         return self.nm1
 
@@ -456,8 +492,10 @@ class BillingProviderDetail(object):
         print "  reference id: %s" % self.reference_id
         if self.secondary_id:
             print "  secondary id: %s" % str(self.secondary_id)
-        print "  accepted: %s (%s)" % (self.accepted_num, self.accepted_amt)
-        print "  rejected: %s (%s)" % (self.rejected_num, self.rejected_amt)
+        print "  accepted: %s (%s)" % (self.get_accepted_num(),
+                self.get_accepted_amount())
+        print "  rejected: %s (%s)" % (self.get_rejected_num(),
+                self.get_rejected_amount())
 
         if self.patient_details:
             print "  Patients:"
@@ -558,6 +596,22 @@ class Ansi277caTransactionSet(object):
                         if provider.hl_id == patient_detail.parent_hl_id:
                             provider.add_patient_detail(patient_detail)
 
+    def get_accepted_num(self):
+        return sum([provider.get_accepted_num() for provider in \
+                self.billing_providers])
+
+    def get_rejected_num(self):
+        return sum([provider.get_rejected_num() for provider in \
+                self.billing_providers])
+
+    def get_accepted_amount(self):
+        return sum([provider.get_accepted_amount() for provider in \
+                self.billing_providers])
+
+    def get_rejected_amount(self):
+        return sum([provider.get_rejected_amount() for provider in \
+                self.billing_providers])
+
     def has_rejections(self):
         for provider in self.billing_providers:
             if provider.has_rejections():
@@ -608,9 +662,6 @@ class Ansi277caDocument(object):
 
 def _report_patient(patient):
     for claim in patient.get_claims():
-        if claim.is_accepted():
-            continue
-
         print ""
         print "patient: %s" % patient.nm1.nameAsStr()
         print "claim id: %s" % claim.reference_id
@@ -638,17 +689,16 @@ def text_report(doc):
 
     for fgroup in doc.functional_groups:
         for tset in fgroup.transaction_sets:
-            print "  reference id: %s" % tset.reference_id
-            print "  837 creation date: %s" % tset.ts_create_date
-            print "  837 creation time: %s" % tset.ts_create_time
+            print "reference id: %s" % tset.reference_id
+            print "837 creation date: %s" % tset.ts_create_date
+            print "837 creation time: %s" % tset.ts_create_time
             tset.information_source.dump()
             tset.information_receiver.dump()
             for provider in tset.billing_providers:
-                if not provider.has_rejections():
-                    continue
-
                 for patient in provider.get_patient_details():
                     _report_patient(patient)
+            print ""
+            print ""
 
 def main():
     arg_parser = argparse.ArgumentParser()
@@ -673,10 +723,7 @@ def main():
         x12.print_document(parse_x12_doc(file_obj))
         sys.exit(0)
 
-    for fgroup in a277cadoc.functional_groups:
-        for tset in fgroup.transaction_sets:
-            if tset.has_rejections():
-                text_report(a277cadoc)
+    text_report(a277cadoc)
 
 if __name__ == "__main__":
     main()
