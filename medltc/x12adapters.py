@@ -77,8 +77,8 @@ class NM1(object):
 
 class NameAndAddress(object):
     def __init__(self, subloop):
-        self.entity_code = None
-        self.name = None
+        self.entity_code = ""
+        self.name = ""
         self.id_code_type = None
         self.id_code = None
         self.address1 = None
@@ -100,8 +100,10 @@ class NameAndAddress(object):
             nelem = child.numElements()
             segname = child.getName()
             if segname == "N1":
-                self.entity_code = child.getElement(1)
-                self.name = child.getElement(2)
+                if nelem > 0:
+                    self.entity_code = child.getElement(1)
+                if nelem > 1:
+                    self.name = child.getElement(2)
                 if nelem >= 4:
                     self.id_code = child.getElement(4)
                     self.id_code_type = child.getElement(3) or "XV"
