@@ -2,7 +2,7 @@
 
 http://www.wpc-edi.com/reference/codelists/healthcare/claim-status-codes/
 
-Date: 12/26/2014
+Date: 3/7/2016
 """
 
 __CODE_MAP = {
@@ -661,7 +661,9 @@ __CODE_MAP = {
 "768" : "Service date outside the accidental injury coverage period.",
 "769" : "DME Repair or Maintenance",
 "770" : "Duplicate of a claim processed or in process as a crossover/coordination of benefits claim.",
-"771" : "Claim submitted prematurely. Please resubmit after crossover/payer to payer COB allotted waiting period." }
+"771" : "Claim submitted prematurely. Please resubmit after crossover/payer to payer COB allotted waiting period.",
+"772" : "The greatest level of diagnosis code specificity is required."
+    }
 
 def code_to_str(code):
     return __CODE_MAP[code]
