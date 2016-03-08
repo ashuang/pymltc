@@ -651,5 +651,5 @@ if __name__ == "__main__":
         a.skip(1)
     a.skip(-8)
     print "============= %d / %d" % (a.position, a.nrecs)
-    print "deleted: %s" % str(a.r.deleted)
-    a.r.prettyPrint()
+    print "deleted: %s" % str(a.record.deleted)
+    a.record.prettyPrint()

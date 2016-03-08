@@ -102,7 +102,7 @@ if __name__ == "__main__":
         import dbf
         db = dbf.create( dbfname, 
                  [ ( "CODE",     "C", 5,  0, False ),
-                   ( "DESC",     "C", 254,  0, False ),
+                   ( "DESCRIPT",     "C", 254,  0, False ),
                    ] )
         keys = codes.keys()
         keys.sort()
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             description = codes[code]
             db.append_blank()
             db["CODE"] = code
-            db["DESC"] = description[:254]
+            db["DESCRIPT"] = description[:254]
     else:
         keys = codes.keys()
         keys.sort()
