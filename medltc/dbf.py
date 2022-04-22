@@ -383,7 +383,14 @@ class dbf:
             self.record = self.__eof
             self.f.seek(-1, 1)
             self.position = -1
-            return 
+            return
+
+        # Be robust to an unexpected EOF missing the expected EOF marker
+        if (len(rawtext) == 0):
+            self.record = self.__eof
+            self.position = -1
+            return
+
         self.record = record(self.fields, rawtext)
         self.f.seek(-self.recordsize, 1)
 
