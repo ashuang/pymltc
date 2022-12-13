@@ -250,8 +250,9 @@ class record:
             if len(value) < fld.len:
                 value += ' ' * (fld.len - len(value))
         elif fld.type == "D":
-            # don't do anything with sval... just make sure it works
-            sval = value.strftime("%Y%m%d")
+            # Allow any value for date. Values that don't parse properly using
+            # `value.strftime("%Y%m%d")` will be stored as null dates
+            pass
         elif fld.type in "FN":
             if value is not None:
                 # make sure that the argument is a valid number
